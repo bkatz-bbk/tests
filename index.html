@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Additions Chrono</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      max-width: 480px;
+      padding: 32px 24px;
+      animation: fadeIn 0.3s ease;
+    }
+    .screen.active { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 { font-size: 2rem; font-weight: 700; text-align: center; }
+    h2 { font-size: 1.5rem; font-weight: 600; text-align: center; }
+    .subtitle { color: #94a3b8; text-align: center; font-size: 0.95rem; line-height: 1.6; }
+    input[type="password"] {
+      width: 100%; padding: 14px 18px; font-size: 1.1rem;
+      border: 2px solid #334155; border-radius: 12px;
+      background: #1e293b; color: #f1f5f9; outline: none; transition: border-color 0.2s;
+    }
+    input[type="password"]:focus { border-color: #6366f1; }
+    input[type="text"] {
+      width: 100%; padding: 14px 18px; font-size: 1.1rem;
+      border: 2px solid #334155; border-radius: 12px;
+      background: #1e293b; color: #f1f5f9; outline: none; transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: #6366f1; }
+    button {
+      padding: 14px 32px; font-size: 1rem; font-weight: 600;
+      border: none; border-radius: 12px; cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+    button:active { transform: scale(0.97); }
+    .btn-primary { background: #6366f1; color: white; width: 100%; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-secondary { background: #1e293b; color: #94a3b8; border: 2px solid #334155; }
+    .btn-secondary:hover { background: #334155; color: #f1f5f9; }
+    .progress-bar-wrap { width: 100%; background: #1e293b; border-radius: 99px; height: 8px; }
+    .progress-bar { height: 8px; border-radius: 99px; background: #6366f1; transition: width 0.3s; }
+    .question-counter { font-size: 0.85rem; color: #64748b; }
+    .timer-ring { position: relative; width: 120px; height: 120px; }
+    .timer-ring svg { transform: rotate(-90deg); }
+    .timer-ring circle { fill: none; stroke-width: 8; }
+    .timer-ring .bg { stroke: #1e293b; }
+    .timer-ring .fg { stroke: #6366f1; stroke-linecap: round; transition: stroke-dashoffset 0.1s linear, stroke 0.3s; }
+    .timer-text {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 1.8rem; font-weight: 700;
+    }
+    .question-box { font-size: 3rem; font-weight: 800; letter-spacing: 0.05em; text-align: center; }
+    .answer-input {
+      width: 100%; padding: 16px; font-size: 2rem; font-weight: 700;
+      text-align: center; border: 3px solid #334155; border-radius: 16px;
+      background: #1e293b; color: #f1f5f9; outline: none; transition: border-color 0.2s;
+    }
+    .answer-input:focus { border-color: #6366f1; }
+    .answer-input.correct { border-color: #22c55e; background: #052e16; }
+    .answer-input.wrong { border-color: #ef4444; background: #2d0a0a; animation: shake 0.4s; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .feedback { font-size: 0.9rem; font-weight: 600; min-height: 22px; text-align: center; }
+    .feedback.ok { color: #22c55e; }
+    .feedback.err { color: #ef4444; }
+    .result-card {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 16px; padding: 24px; width: 100%; text-align: center;
+    }
+    .score-big { font-size: 3.5rem; font-weight: 800; color: #6366f1; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    .stat {
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+    .stat-value.good { color: #22c55e; }
+    .stat-value.bad { color: #ef4444; }
+    .scores-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .scores-table th {
+      text-align: left; padding: 10px 12px; color: #64748b;
+      border-bottom: 1px solid #334155; font-weight: 600;
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .scores-table td { padding: 12px; border-bottom: 1px solid #1e293b; }
+    .scores-table tr:hover td { background: #1e293b; }
+    .scores-table .rank { color: #64748b; font-weight: 700; }
+    .scores-table .name-cell { font-weight: 600; }
+    .scores-table .highlight td { background: #1e1e3f; }
+    .scores-table .highlight .name-cell { color: #a5b4fc; }
+    .empty-scores { color: #475569; text-align: center; padding: 40px 0; font-style: italic; }
+    .nav-btns { display: flex; gap: 12px; width: 100%; }
+    .nav-btns button { flex: 1; }
+    .tag { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .tag-green { background: #052e16; color: #22c55e; }
+    .tag-red { background: #2d0a0a; color: #ef4444; }
+  </style>
+</head>
+<body>
+
+<div class="screen active" id="screen-password">
+  <h1>🔒 Additions Chrono</h1>
+  <p class="subtitle">Entre le mot de passe pour accéder à l'application.</p>
+  <input type="password" id="input-password" placeholder="Mot de passe..." autocomplete="off">
+  <button class="btn-primary" onclick="checkPassword()">Entrer →</button>
+  <div class="feedback err" id="password-error" style="min-height:22px;"></div>
+</div>
+
+<div class="screen" id="screen-welcome">
+  <h1>🧮 Additions Chrono</h1>
+  <p class="subtitle">10 additions à un chiffre.<br>Maximum <strong>5 secondes</strong> par réponse.<br>Chaque erreur ajoute <strong>5 secondes</strong>.</p>
+  <input type="text" id="input-name" placeholder="Ton prénom..." autocomplete="off" maxlength="20">
+  <button class="btn-primary" onclick="startGame()">Commencer →</button>
+  <button class="btn-secondary" onclick="showScreen('screen-scores')">🏆 Tableau des scores</button>
+</div>
+
+<div class="screen" id="screen-game">
+  <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+    <span class="question-counter" id="question-counter">Question 1/10</span>
+    <span class="question-counter" id="penalty-display" style="color:#ef4444;"></span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+  </div>
+  <div class="timer-ring">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle class="bg" cx="60" cy="60" r="52"/>
+      <circle class="fg" id="timer-circle" cx="60" cy="60" r="52"
+        stroke-dasharray="326.7" stroke-dashoffset="0"/>
+    </svg>
+    <div class="timer-text" id="timer-text">5.0</div>
+  </div>
+  <div class="question-box" id="question-box">? + ? = ?</div>
+  <input class="answer-input" type="number" id="answer-input"
+    placeholder="?" min="0" max="18" autocomplete="off"
+    oninput="checkAnswer()" onkeydown="handleKey(event)">
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="screen" id="screen-results">
+  <h2>Résultats</h2>
+  <div class="result-card">
+    <div style="color:#94a3b8; font-size:0.85rem; margin-bottom:8px;">Score final</div>
+    <div class="score-big" id="result-score">0.0s</div>
+    <div style="color:#94a3b8; font-size:0.85rem; margin-top:8px;" id="result-rank"></div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-label">Temps réel</div>
+      <div class="stat-value" id="result-time">0.0s</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pénalités</div>
+      <div class="stat-value bad" id="result-penalties">+0.0s</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Bonnes réponses</div>
+      <div class="stat-value good" id="result-correct">0/10</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Erreurs</div>
+      <div class="stat-value bad" id="result-errors">0</div>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-secondary" onclick="showScreen('screen-scores')">🏆 Scores</button>
+    <button class="btn-primary" onclick="restartWithSameName()">Rejouer</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-scores">
+  <h2>🏆 Tableau des scores</h2>
+  <div id="scores-content" style="width:100%"></div>
+  <div class="nav-btns">
+    <button class="btn-secondary" onclick="clearScores()">Effacer tout</button>
+    <button class="btn-primary" onclick="showScreen('screen-welcome')">← Accueil</button>
+  </div>
+</div>
+
+<script>
+  const PASSWORD = 'SalesforceBKA';
+
+  function checkPassword() {
+    const val = document.getElementById('input-password').value;
+    if (val === PASSWORD) {
+      showScreen('screen-welcome');
+    } else {
+      document.getElementById('password-error').textContent = '✗ Mot de passe incorrect.';
+      document.getElementById('input-password').value = '';
+      document.getElementById('input-password').focus();
+    }
+  }
+
+  document.getElementById('input-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkPassword();
+  });
+
+  const TOTAL = 10;
+  const TIME_LIMIT = 5.0;
+  const PENALTY = 5.0;
+  const CIRCUMFERENCE = 2 * Math.PI * 52;
+
+  let playerName = '';
+  let questions = [];
+  let currentQ = 0;
+  let totalPenalty = 0;
+  let questionTimes = [];
+  let errorCount = 0;
+  let timerInterval = null;
+  let questionStart = 0;
+  let answered = false;
+  let lastHighlightIndex = -1;
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if (id === 'screen-scores') renderScores();
+  }
+
+  function generateQuestions() {
+    const qs = [];
+    for (let i = 0; i < TOTAL; i++) {
+      const a = Math.floor(Math.random() * 9) + 1;
+      const b = Math.floor(Math.random() * 9) + 1;
+      qs.push({ a, b, answer: a + b });
+    }
+    return qs;
+  }
+
+  function startGame() {
+    const nameInput = document.getElementById('input-name');
+    playerName = nameInput.value.trim();
+    if (!playerName) { nameInput.focus(); nameInput.style.borderColor = '#ef4444'; return; }
+    nameInput.style.borderColor = '';
+    questions = generateQuestions();
+    currentQ = 0; totalPenalty = 0; questionTimes = []; errorCount = 0; lastHighlightIndex = -1;
+    showScreen('screen-game');
+    loadQuestion();
+  }
+
+  function restartWithSameName() {
+    questions = generateQuestions();
+    currentQ = 0; totalPenalty = 0; questionTimes = []; errorCount = 0; lastHighlightIndex = -1;
+    showScreen('screen-game');
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    answered = false;
+    const q = questions[currentQ];
+    document.getElementById('question-box').textContent = `${q.a} + ${q.b} = ?`;
+    document.getElementById('question-counter').textContent = `Question ${currentQ + 1}/${TOTAL}`;
+    document.getElementById('progress-bar').style.width = `${(currentQ / TOTAL) * 100}%`;
+    document.getElementById('penalty-display').textContent = totalPenalty > 0 ? `+${totalPenalty.toFixed(0)}s pénalité` : '';
+    const input = document.getElementById('answer-input');
+    input.value = ''; input.className = 'answer-input'; input.disabled = false;
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    questionStart = performance.now();
+    startTimer();
+    setTimeout(() => input.focus(), 50);
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    const circle = document.getElementById('timer-circle');
+    const text = document.getElementById('timer-text');
+    timerInterval = setInterval(() => {
+      const elapsed = (performance.now() - questionStart) / 1000;
+      const remaining = Math.max(0, TIME_LIMIT - elapsed);
+      circle.style.strokeDashoffset = CIRCUMFERENCE * (1 - remaining / TIME_LIMIT);
+      text.textContent = remaining.toFixed(1);
+      if (remaining <= 1.5) circle.style.stroke = '#ef4444';
+      else if (remaining <= 3) circle.style.stroke = '#f59e0b';
+      else circle.style.stroke = '#6366f1';
+      if (remaining <= 0 && !answered) { clearInterval(timerInterval); recordAnswer(false, true); }
+    }, 50);
+  }
+
+  function checkAnswer() {
+    if (answered) return;
+    const val = parseInt(document.getElementById('answer-input').value, 10);
+    if (!isNaN(val) && val === questions[currentQ].answer) recordAnswer(true);
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !answered) {
+      const val = parseInt(document.getElementById('answer-input').value, 10);
+      if (!isNaN(val) && val !== questions[currentQ].answer) recordAnswer(false);
+    }
+  }
+
+  function recordAnswer(correct, timedOut = false) {
+    answered = true;
+    clearInterval(timerInterval);
+    const elapsed = Math.min((performance.now() - questionStart) / 1000, TIME_LIMIT);
+    const input = document.getElementById('answer-input');
+    const feedback = document.getElementById('feedback');
+    const q = questions[currentQ];
+
+    if (correct) {
+      questionTimes.push(elapsed);
+      input.className = 'answer-input correct';
+      feedback.textContent = `✓ Bonne réponse ! (${elapsed.toFixed(2)}s)`;
+      feedback.className = 'feedback ok';
+    } else {
+      questionTimes.push(elapsed + PENALTY);
+      totalPenalty += PENALTY;
+      errorCount++;
+      input.className = 'answer-input wrong';
+      feedback.textContent = timedOut
+        ? `⏱ Temps écoulé ! Réponse : ${q.answer}. +5s`
+        : `✗ Faux ! La réponse était ${q.answer}. +5s de pénalité`;
+      feedback.className = 'feedback err';
+      input.value = q.answer;
+    }
+    document.getElementById('timer-circle').style.stroke = correct ? '#22c55e' : '#ef4444';
+    setTimeout(() => { currentQ++; if (currentQ < TOTAL) loadQuestion(); else endGame(); }, 1000);
+  }
+
+  function endGame() {
+    document.getElementById('progress-bar').style.width = '100%';
+    const totalTime = questionTimes.reduce((a, b) => a + b, 0);
+    const realTime = totalTime - totalPenalty;
+    const entry = {
+      name: playerName, score: totalTime, realTime,
+      penalties: totalPenalty, correct: TOTAL - errorCount,
+      errors: errorCount, date: new Date().toLocaleDateString('fr-FR')
+    };
+    saveScore(entry);
+    document.getElementById('result-score').textContent = `${totalTime.toFixed(1)}s`;
+    document.getElementById('result-time').textContent = `${realTime.toFixed(1)}s`;
+    document.getElementById('result-penalties').textContent = `+${totalPenalty.toFixed(1)}s`;
+    document.getElementById('result-correct').textContent = `${TOTAL - errorCount}/10`;
+    document.getElementById('result-errors').textContent = errorCount;
+    const scores = getScores();
+    const rank = scores.findIndex(s =>
+      s.name === entry.name && Math.abs(s.score - entry.score) < 0.01 && s.date === entry.date
+    ) + 1;
+    lastHighlightIndex = rank - 1;
+    document.getElementById('result-rank').textContent =
+      rank === 1 ? '🥇 Nouveau record !' :
+      rank === 2 ? '🥈 2ème place' :
+      rank === 3 ? '🥉 3ème place' : `${rank}ème place`;
+    showScreen('screen-results');
+  }
+
+  function getScores() {
+    try { return JSON.parse(localStorage.getItem('additions_scores') || '[]'); }
+    catch { return []; }
+  }
+
+  function saveScore(entry) {
+    const scores = getScores();
+    scores.push(entry);
+    scores.sort((a, b) => a.score - b.score);
+    localStorage.setItem('additions_scores', JSON.stringify(scores.slice(0, 50)));
+  }
+
+  function clearScores() {
+    if (confirm('Effacer tous les scores ?')) {
+      localStorage.removeItem('additions_scores');
+      lastHighlightIndex = -1;
+      renderScores();
+    }
+  }
+
+  function renderScores() {
+    const scores = getScores();
+    const container = document.getElementById('scores-content');
+    if (scores.length === 0) {
+      container.innerHTML = '<p class="empty-scores">Aucun score enregistré.<br>Lance une partie !</p>';
+      return;
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const rows = scores.map((s, i) => `
+      <tr class="${i === lastHighlightIndex ? 'highlight' : ''}">
+        <td class="rank">${medals[i] || (i + 1)}</td>
+        <td class="name-cell">${escHtml(s.name)}</td>
+        <td><strong>${s.score.toFixed(1)}s</strong></td>
+        <td>${s.correct}/10</td>
+        <td><span class="tag ${s.errors === 0 ? 'tag-green' : 'tag-red'}">${s.errors === 0 ? '✓ Parfait' : `${s.errors} err.`}</span></td>
+        <td style="color:#64748b;font-size:0.8rem">${s.date}</td>
+      </tr>`).join('');
+    container.innerHTML = `
+      <table class="scores-table">
+        <thead><tr><th>#</th><th>Nom</th><th>Score</th><th>OK</th><th>Erreurs</th><th>Date</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  document.getElementById('input-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startGame();
+  });
+</script>
+</body>
+</html>
