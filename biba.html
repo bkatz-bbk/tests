@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Le Test BIBA — Tu crois me connaître ?</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', system-ui, sans-serif;
+      background: #0d0d0d;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(255,0,128,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(120,0,255,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 60% 80%, rgba(0,200,255,0.08) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 600px;
+      padding: 24px 20px;
+    }
+
+    /* SCREENS */
+    .screen { display: none; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .screen.active { display: block; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* INTRO */
+    .intro-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff0080, #7b00ff);
+      padding: 6px 16px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .intro-title {
+      font-size: clamp(2rem, 8vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .intro-title .highlight {
+      background: linear-gradient(135deg, #ff0080, #ff8c00, #7b00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .intro-sub {
+      color: #888;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff0080, #7b00ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      margin: 0 auto 28px;
+      box-shadow: 0 0 40px rgba(255,0,128,0.4);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 40px rgba(255,0,128,0.4); }
+      50% { box-shadow: 0 0 60px rgba(255,0,128,0.7); }
+    }
+
+    /* INPUT NAME */
+    .name-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      font-weight: 600;
+      border: 2px solid #2a2a2a;
+      border-radius: 16px;
+      background: #1a1a1a;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 16px;
+    }
+    .name-input:focus { border-color: #ff0080; }
+    .name-input::placeholder { color: #444; }
+
+    /* BUTTONS */
+    .btn {
+      width: 100%;
+      padding: 16px 24px;
+      font-size: 1.05rem;
+      font-family: inherit;
+      font-weight: 700;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-glow {
+      background: linear-gradient(135deg, #ff0080, #7b00ff);
+      color: white;
+      box-shadow: 0 4px 30px rgba(255,0,128,0.35);
+    }
+    .btn-glow:hover { box-shadow: 0 4px 40px rgba(255,0,128,0.55); transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: #1a1a1a;
+      color: #888;
+      border: 2px solid #2a2a2a;
+      margin-top: 10px;
+    }
+    .btn-ghost:hover { background: #222; color: #fff; }
+
+    /* PROGRESS */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .progress-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: #1a1a1a;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fg {
+      height: 100%;
+      background: linear-gradient(90deg, #ff0080, #7b00ff);
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .progress-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    /* QUESTION */
+    .question-num {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff0080, #7b00ff);
+      padding: 4px 14px;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .question-text {
+      font-size: clamp(1.2rem, 4vw, 1.6rem);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 28px;
+    }
+
+    /* CHOICES */
+    .choices { display: flex; flex-direction: column; gap: 12px; }
+
+    .choice {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      font-weight: 600;
+      text-align: left;
+      border: 2px solid #1f1f1f;
+      border-radius: 16px;
+      background: #141414;
+      color: #ccc;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .choice::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,0,128,0.05), rgba(123,0,255,0.05));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .choice:hover:not(:disabled)::before { opacity: 1; }
+    .choice:hover:not(:disabled) { border-color: #333; color: #fff; transform: translateX(4px); }
+
+    .choice.correct {
+      border-color: #00e676;
+      background: #001a0e;
+      color: #00e676;
+      animation: correctBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .choice.wrong {
+      border-color: #ff1744;
+      background: #1a0006;
+      color: #ff1744;
+      animation: wrongShake 0.4s;
+    }
+    .choice.reveal-correct {
+      border-color: #00e676;
+      background: #001a0e;
+      color: #00e676;
+    }
+    .choice:disabled { cursor: default; }
+
+    @keyframes correctBounce {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    .choice-emoji {
+      margin-right: 10px;
+      font-size: 1.1rem;
+    }
+
+    /* FEEDBACK */
+    .feedback-box {
+      margin-top: 20px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.5;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+    .feedback-box.show { opacity: 1; transform: translateY(0); }
+    .feedback-box.ok { background: #001a0e; border: 1px solid #00e676; color: #00e676; }
+    .feedback-box.ko { background: #1a0006; border: 1px solid #ff1744; color: #ff8a8a; }
+
+    .next-btn-wrap { margin-top: 20px; }
+
+    /* RESULTS */
+    .result-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      margin: 0 auto 20px;
+    }
+
+    .result-title {
+      font-size: clamp(1.6rem, 6vw, 2.4rem);
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .result-sub {
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 28px;
+    }
+
+    .score-display {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .score-number {
+      font-size: 5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #ff0080, #7b00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .score-total { font-size: 1.5rem; color: #555; font-weight: 700; }
+
+    .result-comment {
+      background: #141414;
+      border: 1px solid #1f1f1f;
+      border-radius: 20px;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ccc;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .recap-list {
+      margin-bottom: 28px;
+    }
+    .recap-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #1a1a1a;
+      font-size: 0.85rem;
+      color: #777;
+    }
+    .recap-item:last-child { border-bottom: none; }
+    .recap-dot { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .recap-item.ok { color: #00e676; }
+    .recap-item.ko { color: #ff6b6b; }
+
+    /* SHARE */
+    .share-card {
+      background: linear-gradient(135deg, #ff0080, #7b00ff);
+      border-radius: 20px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .share-title { font-weight: 900; font-size: 1.1rem; margin-bottom: 4px; }
+    .share-sub { font-size: 0.85rem; opacity: 0.8; }
+
+    /* Stars animation */
+    .stars {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .star {
+      font-size: 1.8rem;
+      animation: starPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    .star:nth-child(1) { animation-delay: 0.1s; }
+    .star:nth-child(2) { animation-delay: 0.2s; }
+    .star:nth-child(3) { animation-delay: 0.3s; }
+    .star:nth-child(4) { animation-delay: 0.4s; }
+    .star:nth-child(5) { animation-delay: 0.5s; }
+    @keyframes starPop {
+      from { opacity: 0; transform: scale(0) rotate(-30deg); }
+      to { opacity: 1; transform: scale(1) rotate(0); }
+    }
+
+    /* Confetti-like dots */
+    .confetti-wrap {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      overflow: hidden;
+    }
+    .confetti-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    .text-center { text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="confetti-wrap" id="confetti"></div>
+
+<div class="container">
+
+  <!-- SCREEN: INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="text-center">
+      <div class="avatar">😎</div>
+      <div class="intro-badge">🔥 Test BIBA Officiel</div>
+      <h1 class="intro-title">Tu crois vraiment<br>me <span class="highlight">connaître ?</span></h1>
+      <p class="intro-sub">10 questions. Pas de triche. Pas de pitié.<br>Prouve que t'es pas un(e) inconnu(e).</p>
+    </div>
+    <input class="name-input" type="text" id="input-name" placeholder="Ton prénom..." maxlength="20" autocomplete="off">
+    <button class="btn btn-glow" onclick="startQuiz()">Je relève le défi 💪</button>
+    <button class="btn btn-ghost" onclick="startQuiz()" style="font-size:0.85rem;">Entrer anonymement 🥷</button>
+  </div>
+
+  <!-- SCREEN: QUESTION -->
+  <div class="screen" id="screen-question">
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fg" id="progress-bar"></div>
+      </div>
+      <span class="progress-label" id="progress-label">1 / 10</span>
+    </div>
+    <div class="question-num" id="question-num">Question 1</div>
+    <div class="question-text" id="question-text"></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback-box" id="feedback-box"></div>
+    <div class="next-btn-wrap" id="next-btn-wrap" style="display:none;">
+      <button class="btn btn-glow" id="next-btn" onclick="nextQuestion()">Question suivante →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: RESULTS -->
+  <div class="screen" id="screen-results">
+    <div class="text-center">
+      <div class="result-avatar" id="result-avatar"></div>
+      <div class="stars" id="stars"></div>
+      <h2 class="result-title" id="result-title"></h2>
+      <p class="result-sub" id="result-sub"></p>
+    </div>
+
+    <div class="score-display">
+      <span class="score-number" id="score-number">0</span>
+      <span class="score-total">&thinsp;/ 10</span>
+    </div>
+
+    <div class="result-comment" id="result-comment"></div>
+
+    <div class="recap-list" id="recap-list"></div>
+
+    <button class="btn btn-glow" onclick="restart()">Recommencer 🔄</button>
+  </div>
+
+</div>
+
+<script>
+  const questions = [
+    {
+      q: "Qu'est-ce qui m'énerve le plus dans une réunion ?",
+      a: "Quand je comprends où on m'emmène et que ça ne va pas assez vite",
+      wrong: [
+        "Quand il n'y a plus de viennoiseries 🥐",
+        "Quand quelqu'un partage son écran avec 47 onglets ouverts",
+        "Quand on dit « on se fait un call rapide » et que ça dure 2h"
+      ],
+      feedback_ok: "✅ Exactement. Dis-moi où on va et ON Y VA.",
+      feedback_ko: "❌ Rien à voir. La lenteur d'exécution, c'est le vrai ennemi."
+    },
+    {
+      q: "Ma commande de café automatique, c'est quoi ?",
+      a: "Expresso",
+      wrong: [
+        "Déca soja vanille tiède sans mousse (bien sûr)",
+        "Eau chaude — il économise sur tout",
+        "Tout ce qu'il reste dans la machine, peu importe"
+      ],
+      feedback_ok: "☕ Court, puissant, sans chichis. Comme moi.",
+      feedback_ko: "❌ Ces réponses sont une insulte à la caféine."
+    },
+    {
+      q: "Si je devais partir sur une île déserte, j'emporterais…",
+      a: "Mon téléphone",
+      wrong: [
+        "Un bon livre et la paix intérieure ✌️",
+        "Mon chef (pour qu'il souffre avec moi)",
+        "Un générateur à gâteaux (ça existe pas mais c'est bien)"
+      ],
+      feedback_ok: "📱 Connecté même naufragé. C'est moi.",
+      feedback_ko: "❌ Sérieusement ? Sans connexion c'est pas une île déserte, c'est l'enfer."
+    },
+    {
+      q: "Mon emoji le plus utilisé, c'est ?",
+      a: "❤️ Cœur",
+      wrong: [
+        "💀 Crâne — pour commenter les réunions",
+        "🤡 Clown — auto-évaluation honnête",
+        "😴 Endormi — après 14h le jeudi"
+      ],
+      feedback_ok: "❤️ J'aime les gens, c'est tout.",
+      feedback_ko: "❌ Non non non. Je suis quelqu'un de chaleureux !"
+    },
+    {
+      q: "Dans une soirée, je suis plutôt…",
+      a: "À parler à tout le monde",
+      wrong: [
+        "Collé au buffet comme si c'était mon seul but",
+        "Dans un coin à scroller LinkedIn (réseau réseau réseau)",
+        "Rentré à 21h30 « j'ai un truc tôt demain »"
+      ],
+      feedback_ok: "🗣️ Je connais tout le monde avant la fin de la soirée.",
+      feedback_ko: "❌ Tu me vois vraiment dans un coin tout seul ?!"
+    },
+    {
+      q: "Mon plus grand talent caché, c'est ?",
+      a: "Je danse tellement mal",
+      wrong: [
+        "Cuisiner des pâtes (niveau débutant avancé)",
+        "Retenir tous les prénoms au premier regard",
+        "Réparer n'importe quoi avec du scotch et de l'optimisme"
+      ],
+      feedback_ok: "💃 Un talent RARE. Peu de gens assument avec autant de fierté.",
+      feedback_ko: "❌ La mauvaise danse c'est un art, et je le maîtrise."
+    },
+    {
+      q: "Ce qui me fait perdre 10 minutes chaque matin, c'est ?",
+      a: "Les WC",
+      wrong: [
+        "Trouver mes clés (elles sont toujours là même endroit mais bon)",
+        "Regarder mon téléphone « juste 2 minutes »",
+        "Choisir ma tenue (même résultat tous les jours)"
+      ],
+      feedback_ok: "🚽 Sacré rituel matinal. Inviolable.",
+      feedback_ko: "❌ Non. La vraie réponse est… biologique."
+    },
+    {
+      q: "L'app sur mon téléphone que je pourrais jamais supprimer ?",
+      a: "WhatsApp",
+      wrong: [
+        "Météo — pour se plaindre avec des arguments solides",
+        "LinkedIn — profil vu 47 fois cette semaine, pas de souci",
+        "Notes — remplie de trucs incompréhensibles depuis 2019"
+      ],
+      feedback_ok: "💬 WhatsApp c'est la vie. Point final.",
+      feedback_ko: "❌ Tu me vois vraiment sans WhatsApp ? Je serais coupé du monde."
+    },
+    {
+      q: "Si j'étais un personnage de série, je serais…",
+      a: "David Duchovny",
+      wrong: [
+        "Michael Scott (mais en mieux, évidemment)",
+        "Harvey Specter (le charisme sans les costumes hors de prix)",
+        "Le personnage qui meurt en saison 1 pour motiver les autres"
+      ],
+      feedback_ok: "🛸 Classe, mystérieux, un peu chelou. Parfaitement moi.",
+      feedback_ko: "❌ Il n'y a qu'une bonne réponse et c'est Duchovny."
+    },
+    {
+      q: "La phrase que mes collègues m'entendent dire le plus souvent ?",
+      a: "Il est con comme un balai",
+      wrong: [
+        "« On va faire ça dans les règles de l'art »",
+        "« J'ai pas eu ton mail » (le classique)",
+        "« C'est pas dans mon scope » (le bouclier universel)"
+      ],
+      feedback_ok: "🧹 Un classique. Intemporel. Efficace.",
+      feedback_ko: "❌ Cette expression c'est presque ma signature."
+    }
+  ];
+
+  const EMOJIS_CHOICES = ['🅐', '🅑', '🅒', '🅓'];
+
+  let currentQ = 0;
+  let score = 0;
+  let playerName = '';
+  let results = [];
+  let answered = false;
+
+  function startQuiz() {
+    const input = document.getElementById('input-name');
+    playerName = input.value.trim() || 'Anonyme';
+    currentQ = 0; score = 0; results = [];
+    showScreen('screen-question');
+    loadQuestion();
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function loadQuestion() {
+    answered = false;
+    const q = questions[currentQ];
+    const pct = (currentQ / questions.length) * 100;
+
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = `${currentQ + 1} / ${questions.length}`;
+    document.getElementById('question-num').textContent = `Question ${currentQ + 1}`;
+    document.getElementById('question-text').textContent = q.q;
+
+    const choices = shuffle([q.a, ...q.wrong]);
+    const correctIndex = choices.indexOf(q.a);
+
+    const choicesEl = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    choices.forEach((c, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.innerHTML = `<span class="choice-emoji">${EMOJIS_CHOICES[i]}</span>${c}`;
+      btn.onclick = () => answer(btn, i === correctIndex, correctIndex, choices);
+      choicesEl.appendChild(btn);
+    });
+
+    const fb = document.getElementById('feedback-box');
+    fb.className = 'feedback-box';
+    fb.textContent = '';
+    document.getElementById('next-btn-wrap').style.display = 'none';
+  }
+
+  function answer(btn, isCorrect, correctIndex, choices) {
+    if (answered) return;
+    answered = true;
+
+    const allBtns = document.querySelectorAll('.choice');
+    allBtns.forEach(b => b.disabled = true);
+
+    const q = questions[currentQ];
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      score++;
+      results.push({ q: q.q, ok: true });
+      showFeedback(q.feedback_ok, true);
+    } else {
+      btn.classList.add('wrong');
+      allBtns[correctIndex].classList.add('reveal-correct');
+      results.push({ q: q.q, ok: false });
+      showFeedback(q.feedback_ko, false);
+    }
+
+    document.getElementById('next-btn-wrap').style.display = 'block';
+    const nextBtn = document.getElementById('next-btn');
+    nextBtn.textContent = currentQ < questions.length - 1 ? 'Question suivante →' : 'Voir mes résultats 🎯';
+  }
+
+  function showFeedback(text, ok) {
+    const fb = document.getElementById('feedback-box');
+    fb.textContent = text;
+    fb.className = 'feedback-box ' + (ok ? 'ok' : 'ko');
+    setTimeout(() => fb.classList.add('show'), 10);
+  }
+
+  function nextQuestion() {
+    currentQ++;
+    if (currentQ < questions.length) {
+      loadQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function showResults() {
+    document.getElementById('progress-bar').style.width = '100%';
+    showScreen('screen-results');
+
+    const tiers = [
+      { max: 2, emoji: '🙈', title: 'Tu me connais à peine...', sub: 'Sérieusement, t\'as au moins déjà entendu mon prénom ?', comment: `${playerName}, soyons honnêtes : t'as répondu au hasard. Et ça se voit. Y'a des inconnus dans la rue qui me connaissent mieux que toi.`, stars: 1 },
+      { max: 4, emoji: '😬', title: 'Connaissance de surface', sub: 'Tu sais que j\'existe, c\'est déjà ça.', comment: `${playerName}, t'es au niveau "on se croise dans le couloir et on se dit bonjour". C'est mieux que rien, mais c'est pas brillant.`, stars: 2 },
+      { max: 6, emoji: '🤔', title: 'Pas mal... mais peut mieux faire', sub: 'T\'as quelques souvenirs mais des trous énormes.', comment: `${playerName}, tu m'as à moitié cerné(e). La moitié qui reste te réserve encore des surprises. Reviens quand t'auras bossé.`, stars: 3 },
+      { max: 8, emoji: '😏', title: 'Tu me connais bien !', sub: 'Impressionnant(e). T\'as visiblement fait attention.', comment: `${playerName}, respect. T'as vraiment écouté quand je parlais. Soit t'es attentif(ve), soit t'as un peu stalké. Je juge pas.`, stars: 4 },
+      { max: 9, emoji: '🔥', title: 'Fan niveau pro !', sub: 'T\'aurais pas une shrine chez toi par hasard ?', comment: `${playerName}, franchement c'est troublant. T'as presque tout bon. C'est beau, c'est flippant, c'est les deux.`, stars: 5 },
+      { max: 10, emoji: '🏆', title: 'PARFAIT. 10/10.', sub: 'Soit t\'es mon clone, soit tu m\'as espionné(e).', comment: `${playerName}, BRAVO. Score parfait. Là j'ai deux théories : soit t'es vraiment mon meilleur(e) ami(e), soit tu me surveilles. Dans les deux cas... merci ? 😅`, stars: 5 }
+    ];
+
+    const tier = tiers.find(t => score <= t.max) || tiers[tiers.length - 1];
+
+    document.getElementById('result-avatar').textContent = tier.emoji;
+    document.getElementById('result-avatar').style.background = score >= 7
+      ? 'linear-gradient(135deg, #ff8c00, #ff0080)'
+      : score >= 5
+      ? 'linear-gradient(135deg, #7b00ff, #ff0080)'
+      : 'linear-gradient(135deg, #1a1a1a, #333)';
+
+    document.getElementById('result-title').textContent = tier.title;
+    document.getElementById('result-sub').textContent = tier.sub;
+    document.getElementById('score-number').textContent = score;
+    document.getElementById('result-comment').textContent = tier.comment;
+
+    // Stars
+    const starsEl = document.getElementById('stars');
+    starsEl.innerHTML = '';
+    for (let i = 0; i < 5; i++) {
+      const s = document.createElement('span');
+      s.className = 'star';
+      s.textContent = i < tier.stars ? '⭐' : '☆';
+      starsEl.appendChild(s);
+    }
+
+    // Recap
+    const recapEl = document.getElementById('recap-list');
+    recapEl.innerHTML = results.map((r, i) => `
+      <div class="recap-item ${r.ok ? 'ok' : 'ko'}">
+        <span class="recap-dot">${r.ok ? '✅' : '❌'}</span>
+        <span>Q${i + 1} — ${r.q}</span>
+      </div>
+    `).join('');
+
+    if (score >= 8) launchConfetti();
+  }
+
+  function launchConfetti() {
+    const colors = ['#ff0080', '#7b00ff', '#00e676', '#ff8c00', '#00b0ff', '#ffeb3b'];
+    const wrap = document.getElementById('confetti');
+    wrap.innerHTML = '';
+    for (let i = 0; i < 60; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'confetti-dot';
+      dot.style.cssText = `
+        left: ${Math.random() * 100}%;
+        top: -10px;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        animation-duration: ${1.5 + Math.random() * 2}s;
+        animation-delay: ${Math.random() * 1}s;
+        width: ${6 + Math.random() * 8}px;
+        height: ${6 + Math.random() * 8}px;
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      `;
+      wrap.appendChild(dot);
+    }
+    setTimeout(() => wrap.innerHTML = '', 4000);
+  }
+
+  function restart() {
+    currentQ = 0; score = 0; results = [];
+    showScreen('screen-intro');
+    document.getElementById('input-name').value = '';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const active = document.querySelector('.screen.active');
+      if (active.id === 'screen-intro') startQuiz();
+      else if (active.id === 'screen-question' && answered) nextQuestion();
+    }
+    if (active?.id === 'screen-question' && !answered) {
+      const map = { '1': 0, '2': 1, '3': 2, '4': 3 };
+      if (map[e.key] !== undefined) {
+        const btns = document.querySelectorAll('.choice');
+        if (btns[map[e.key]]) btns[map[e.key]].click();
+      }
+    }
+  });
+
+  document.getElementById('input-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startQuiz();
+  });
+</script>
+</body>
+</html>
